@@ -1,0 +1,22 @@
+.env
+**/.env
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Logs
+*.log
+
+# Build outputs
+dist/
+build/
+**/dist/
+**/build/
+
+# Backend generated uploads/files
+backend/**/uploads/offer-letters/*
+backend/**/uploads/certificates/*
+backend/**/uploads/resumes/*
+backend/**/uploads/avatars/*
+backend/**/uploads/weekly-reports/*
