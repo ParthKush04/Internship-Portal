@@ -1,7 +1,9 @@
 import fs from "fs";
+import os from "os";
 import path from "path";
 import { fileURLToPath } from 'url';
 import { offerLetterTemplate } from "./offerLetterTemplate.js";
+import { generateOfferLetter } from "./generateOfferLetter.js";
 import { generatePdf } from "./generatePdf.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -18,17 +20,22 @@ export const generateOfferLetterPdf = async ({
   hrContactPhone = "+91- 9044775397"
 }) => {
   try {
-    // Use __dirname to get directory relative to this file (backend/src/utils)
-    // Then go up to backend directory: ../.. (utils -> src -> backend)
+    // Prefer repository uploads folder, then fall back to OS temp directory.
     const backendDir = path.resolve(__dirname, "..", "..");
-    const offerLetterDir = path.join(backendDir, "uploads", "offer-letters");
+    const preferredOfferLetterDir = path.join(backendDir, "uploads", "offer-letters");
+    let offerLetterDir = preferredOfferLetterDir;
     
     console.log("Backend directory:", backendDir);
-    console.log("Offer letter save directory:", offerLetterDir);
+    console.log("Preferred offer letter save directory:", offerLetterDir);
     
-    if (!fs.existsSync(offerLetterDir)) {
+    try {
       fs.mkdirSync(offerLetterDir, { recursive: true });
-      console.log("Created offer letter directory");
+      console.log("Offer letter directory is ready");
+    } catch (dirError) {
+      const fallbackDir = path.join(os.tmpdir(), "provisioning-tech", "offer-letters");
+      fs.mkdirSync(fallbackDir, { recursive: true });
+      offerLetterDir = fallbackDir;
+      console.warn("Falling back to temp directory for offer letters:", fallbackDir, "Reason:", dirError.message);
     }
 
     const fileName = `offer-letter-${studentId}-${Date.now()}.pdf`;
@@ -74,8 +81,19 @@ export const generateOfferLetterPdf = async ({
     console.log("TEMPLATE DATA OBJECT:", templateData);
     const html = offerLetterTemplate(templateData);
 
-    // Convert HTML to PDF using Puppeteer
-    const pdfBuffer = await generatePdf(html);
+    // Convert HTML to PDF using Puppeteer, then fallback to PDFKit when Chromium is unavailable.
+    let pdfBuffer;
+    try {
+      pdfBuffer = await generatePdf(html);
+    } catch (pdfError) {
+      console.warn("Puppeteer offer letter generation failed, using PDFKit fallback:", pdfError.message);
+      pdfBuffer = await generateOfferLetter({
+        name: templateData.name,
+        internshipType: templateData.internshipType,
+        startDate: templateData.startDate,
+        duration: templateData.duration
+      });
+    }
 
     // Write PDF file
     fs.writeFileSync(absoluteFilePath, pdfBuffer);
