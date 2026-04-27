@@ -18,17 +18,23 @@ const MyApplications = lazy(() => import("./pages/MyApplications.jsx"));
 const MyWeeklyReportsPage = lazy(() => import("./pages/MyWeeklyReportsPage.jsx"));
 
 function ProtectedRoute({ element }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, authReady } = useAuth();
+  if (!authReady) {
+    return <PageSkeleton rows={3} />;
+  }
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
   return element;
 }
 
 function RoleRoute({ allowedRole, element }) {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, authReady } = useAuth();
+  if (!authReady) {
+    return <PageSkeleton rows={3} />;
+  }
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
   if (user?.role !== allowedRole) {
     return <Navigate to="/" replace />;

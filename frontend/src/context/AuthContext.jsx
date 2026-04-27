@@ -39,17 +39,20 @@ const buildUser = (data, token) => {
 function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     if (!storedToken) {
       setAuthToken(null);
+      setAuthReady(true);
       return;
     }
 
     setToken(storedToken);
     setUser(buildUser(null, storedToken));
     setAuthToken(storedToken);
+    setAuthReady(true);
   }, []);
 
   const login = (authData) => {
@@ -74,11 +77,12 @@ function AuthProvider({ children }) {
       user,
       setUser,
       token,
+      authReady,
       isAuthenticated: Boolean(token),
       login,
       logout
     }),
-    [user, token]
+    [user, token, authReady]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
