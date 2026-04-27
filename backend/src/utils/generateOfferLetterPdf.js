@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from 'url';
 import { offerLetterTemplate } from "./offerLetterTemplate.js";
 import { generateOfferLetter } from "./generateOfferLetter.js";
+import { generateOfferLetterFromTemplate } from "./generateOfferLetterFromTemplate.js";
 import { generatePdf } from "./generatePdf.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -79,20 +80,36 @@ export const generateOfferLetterPdf = async ({
     };
 
     console.log("TEMPLATE DATA OBJECT:", templateData);
-    const html = offerLetterTemplate(templateData);
 
-    // Convert HTML to PDF using Puppeteer, then fallback to PDFKit when Chromium is unavailable.
+    // Primary path: use the same multi-page PDF template layout as the reference project.
+    // Fallbacks are kept for resilience when template loading fails.
     let pdfBuffer;
     try {
-      pdfBuffer = await generatePdf(html);
-    } catch (pdfError) {
-      console.warn("Puppeteer offer letter generation failed, using PDFKit fallback:", pdfError.message);
-      pdfBuffer = await generateOfferLetter({
-        name: templateData.name,
-        internshipType: templateData.internshipType,
-        startDate: templateData.startDate,
-        duration: templateData.duration
+      const templatePdfBytes = await generateOfferLetterFromTemplate({
+        refNo: refNumber,
+        studentName: templateData.name,
+        role: templateData.internshipType,
+        startDate,
+        duration,
+        address: "Provisioning Tech",
+        email: "",
+        mobile: ""
       });
+      pdfBuffer = Buffer.from(templatePdfBytes);
+    } catch (templateError) {
+      console.warn("Template-based offer letter generation failed, trying HTML/Puppeteer:", templateError.message);
+      try {
+        const html = offerLetterTemplate(templateData);
+        pdfBuffer = await generatePdf(html);
+      } catch (pdfError) {
+        console.warn("Puppeteer offer letter generation failed, using PDFKit fallback:", pdfError.message);
+        pdfBuffer = await generateOfferLetter({
+          name: templateData.name,
+          internshipType: templateData.internshipType,
+          startDate: templateData.startDate,
+          duration: templateData.duration
+        });
+      }
     }
 
     // Write PDF file
