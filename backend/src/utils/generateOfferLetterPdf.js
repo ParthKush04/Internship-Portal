@@ -85,13 +85,18 @@ export const generateOfferLetterPdf = async ({
     // Fallbacks are kept for resilience when template loading fails.
     let pdfBuffer;
     try {
+      const roleTrack = String(templateData.internshipType || "")
+        .replace(/\s+Intern$/i, "")
+        .trim() || "MERN Stack";
+      const rolePosition = /developer$/i.test(roleTrack) ? roleTrack : `${roleTrack} Developer`;
+
       const templatePdfBytes = await generateOfferLetterFromTemplate({
         refNo: refNumber,
-        offerAsOn: templateData.internshipType,
+        offerAsOn: rolePosition,
+        startDate: templateData.startDate,
         month: String(templateData.duration || "").trim(),
         name: templateData.name,
-        address: "Provisioning Tech",
-        subject: `Internship Offer Letter - ${templateData.internshipType}`,
+        subject: `Internship Offer Letter for the post of ${roleTrack}`,
         salary: "0",
         email: "",
         mobile: ""

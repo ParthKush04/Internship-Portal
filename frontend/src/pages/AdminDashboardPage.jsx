@@ -82,6 +82,10 @@ function AdminDashboardPage() {
   const [weeklyLogs, setWeeklyLogs] = useState([]);
   const [weeklyLogsLoading, setWeeklyLogsLoading] = useState(false);
   const [weeklyLogsError, setWeeklyLogsError] = useState("");
+  const [weeklyReportsContext, setWeeklyReportsContext] = useState({
+    applicationId: null,
+    studentName: ""
+  });
   const [expandedWeeklyLogIds, setExpandedWeeklyLogIds] = useState({});
   const [mentorRemarksDrafts, setMentorRemarksDrafts] = useState({});
   const [savingRemarkId, setSavingRemarkId] = useState(null);
@@ -226,12 +230,18 @@ function AdminDashboardPage() {
     return source.length > 120 ? `${source.slice(0, 117)}...` : source;
   };
 
-  const openWeeklyReportsModal = async () => {
-    setWeeklyReportsModalOpen(true);
+  const openWeeklyReportsModal = async (application = null) => {
+    const selectedApplicationId = application?._id || null;
+    const selectedStudentName = application
+      ? `${application.firstName || ""} ${application.lastName || ""}`.trim()
+      : "";
 
-    if (weeklyLogs.length > 0) {
-      return;
-    }
+    setWeeklyReportsContext({
+      applicationId: selectedApplicationId,
+      studentName: selectedStudentName
+    });
+    setWeeklyReportsModalOpen(true);
+    setExpandedWeeklyLogIds({});
 
     setWeeklyLogsLoading(true);
     setWeeklyLogsError("");
@@ -239,7 +249,10 @@ function AdminDashboardPage() {
     try {
       const token = localStorage.getItem("token");
       setAuthToken(token);
-      const { data } = await api.get("/weekly-logs");
+      const endpoint = selectedApplicationId
+        ? `/weekly-logs/${selectedApplicationId}`
+        : "/weekly-logs";
+      const { data } = await api.get(endpoint);
       const logs = Array.isArray(data?.weeklyLogs) ? data.weeklyLogs : [];
       setWeeklyLogs(logs);
 
@@ -261,6 +274,7 @@ function AdminDashboardPage() {
 
   const closeWeeklyReportsModal = () => {
     setWeeklyReportsModalOpen(false);
+    setWeeklyReportsContext({ applicationId: null, studentName: "" });
   };
 
   const toggleWeeklyLogExpanded = (logId) => {
@@ -722,21 +736,31 @@ function AdminDashboardPage() {
                 <button
                   type="button"
                   onClick={() => completeInternship(application._id)}
-                  className="w-full px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition-colors"
+                  className="group w-full rounded-xl border border-emerald-300 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-300"
                 >
-                  Mark as Complete
+                  <span className="inline-flex items-center gap-1.5">Mark as Complete</span>
                 </button>
               </div>
             )}
 
-            <div className="mt-2 space-y-2">
+            <div className="mt-2 space-y-2.5">
               {canShowExtendButton && (
                 <button
                   type="button"
                   onClick={() => setExtendModal(application._id)}
-                  className="w-full bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600"
+                  className="group w-full rounded-xl border border-amber-300 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-300"
                 >
                   Extend Internship
+                </button>
+              )}
+
+              {!isPendingApplication && (
+                <button
+                  type="button"
+                  onClick={() => openWeeklyReportsModal(application)}
+                  className="w-full rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-700 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-indigo-100 hover:text-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                >
+                  View Weekly Reports
                 </button>
               )}
 
@@ -744,7 +768,7 @@ function AdminDashboardPage() {
                 <button
                   type="button"
                   onClick={() => openCancelModal(application)}
-                  className="w-full rounded-lg bg-red-600 py-2 text-white hover:bg-red-700"
+                  className="group w-full rounded-xl border border-rose-300 bg-gradient-to-r from-rose-500 via-red-600 to-rose-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-rose-300"
                 >
                   Cancel Internship
                 </button>
@@ -787,10 +811,10 @@ function AdminDashboardPage() {
         <div className="mb-6 flex justify-start sm:justify-end">
           <button
             type="button"
-            onClick={openWeeklyReportsModal}
+            onClick={() => openWeeklyReportsModal()}
             className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700"
           >
-            View Weekly Reports
+            View All Weekly Reports
           </button>
         </div>
 
@@ -928,7 +952,11 @@ function AdminDashboardPage() {
               <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-4 py-4 sm:px-6 sm:py-5">
                 <div>
                   <h2 className="text-2xl font-bold text-slate-900">Weekly Reports</h2>
-                  <p className="mt-1 text-sm text-slate-600">Review and annotate weekly log submissions.</p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    {weeklyReportsContext.studentName
+                      ? `Reviewing weekly logs for ${weeklyReportsContext.studentName}`
+                      : "Review and annotate weekly log submissions."}
+                  </p>
                 </div>
                 <button
                   type="button"

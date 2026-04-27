@@ -203,6 +203,7 @@ const drawInline = (page, font, text, x, yBaseline, size, coverWidth) => {
 export const generateOfferLetterFromTemplate = async ({
   refNo = "",
   offerAsOn = "",
+  startDate = "",
   month = "",
   name = "",
   address = "",
@@ -241,64 +242,80 @@ export const generateOfferLetterFromTemplate = async ({
     drawLine(page2, font, `REF NO: ${ref}`, 26.4 + ox, 693.2 + oy, BODY, 520);
   }
 
+  const startDateText = String(startDate || "").trim();
+
   const candidateName = String(name || "").trim();
   if (candidateName) {
     drawLine(page3, font, `Name - ${candidateName}`, 49.6 + ox, 678.1 + oy, BODY, 520);
-    drawLine(page3, font, `Dear, ${candidateName}`, 49.6 + ox, 622.9 + oy, BODY, 520);
+    if (startDateText) {
+      drawLine(page3, font, `Start Date- ${startDateText}`, 395 + ox, 678.1 + oy, BODY, 200);
+    }
+    drawLine(page3, font, `Dear, Mr. ${candidateName}`, 49.6 + ox, 622.9 + oy, BODY, 520);
     drawInline(page5, font, candidateName, 90.5 + ox, 324.4 + oy, BODY, 220);
   }
 
-  const fullAddress = String(address || "").trim();
-  if (fullAddress) {
-    drawAddressSafe(page3, font, fullAddress, 49.6 + ox, 664.3 + oy, BODY, 500);
-  }
+  // Clear any prior injected address region to keep output aligned with reference format.
+  page3.drawRectangle({
+    x: 47 + ox,
+    y: 655 + oy,
+    width: 510,
+    height: 18,
+    color: rgb(1, 1, 1),
+    borderWidth: 0
+  });
 
   const subjectText = String(subject || "").trim();
   if (subjectText) {
     drawLine(page3, font, `SUB: ${subjectText}`, 49.6 + ox, 595.3 + oy, BODY, 520);
   }
 
-  const offerValue = String(offerAsOn || "").trim();
-  const salaryValue = String(salary || "").trim();
-  const monthValue = String(month || "").trim();
+  const position = String(offerAsOn || "").trim() || "MERN Stack Developer";
+  const roleTrack = position.replace(/\s+Developer$/i, "").trim() || position;
+  const readableDate = startDateText || "06/03/2026";
+  const bodyParagraphs = [
+    `This has reference to your application for internship with our organization. We are pleased to offer you an Internship for the position of ${position} with our company.`,
+    `Your internship will commence from ${readableDate}. This internship will provide you with practical exposure and learning opportunities in web development technologies related to the ${roleTrack}.`,
+    "Please note that this is an Unpaid Internship (No Stipend) and no financial remuneration will be provided during the internship period. The purpose of this internship is to provide hands-on experience, industry exposure, and skill development.",
+    "During the internship period, you will be expected to maintain discipline, complete assigned tasks, and follow company policies and guidelines.",
+    "Upon successful completion of the internship and satisfactory performance, the company may provide an Internship Completion Certificate and Experience Letter."
+  ];
 
-  const offerX = 49.6 + ox;
-  const offerTopBaseline = 568.4 + oy;
-  const offerMaxWidth = 500;
-  const offerLineHeight = BODY * 1.12;
-  const offerPrefix = "This has reference to your application for employment, the Company is pleased to offer you as on ";
+  const bodyX = 49.6 + ox;
+  const bodyTopBaseline = 568.4 + oy;
+  const bodyMaxWidth = 500;
+  const bodyLineHeight = BODY * 1.12;
 
-  const offerLines = wrapAfterFixedPrefix(font, offerPrefix, offerValue, BODY, offerMaxWidth, 6);
+  const bodyLines = [];
+  for (const paragraph of bodyParagraphs) {
+    const wrapped = wrapToWidth(font, paragraph, BODY, bodyMaxWidth, 8);
+    bodyLines.push(...wrapped, "");
+  }
+  if (bodyLines.length > 0 && bodyLines[bodyLines.length - 1] === "") {
+    bodyLines.pop();
+  }
 
-  const salaryLine = `On Salary of Rs - ${salaryValue}/- for ${monthValue} month and there after depend on Performance with effect.`;
-
-  const blockLines = appendSalarySameLine(font, offerLines, salaryLine, offerMaxWidth, BODY);
-
-  const desc = 3;
-  const asc = BODY * 0.85;
-  const lastBaseline = offerTopBaseline - (blockLines.length - 1) * offerLineHeight;
-  const blockTop = offerTopBaseline + asc + 2;
-  const blockBottom = lastBaseline - desc;
-
+  const bodyHeight = Math.max(bodyLines.length, 1) * bodyLineHeight + 8;
   page3.drawRectangle({
     x: 40 + ox,
-    y: blockBottom,
+    y: bodyTopBaseline - bodyHeight + 8,
     width: 550,
-    height: blockTop - blockBottom,
+    height: bodyHeight,
     color: rgb(1, 1, 1),
     borderWidth: 0
   });
 
-  let offerY = offerTopBaseline;
-  for (const { text, size } of blockLines) {
-    page3.drawText(text, {
-      x: offerX,
-      y: offerY,
-      size,
-      font,
-      color: rgb(0, 0, 0)
-    });
-    offerY -= offerLineHeight;
+  let bodyY = bodyTopBaseline;
+  for (const line of bodyLines) {
+    if (line) {
+      page3.drawText(line, {
+        x: bodyX,
+        y: bodyY,
+        size: BODY,
+        font,
+        color: rgb(0, 0, 0)
+      });
+    }
+    bodyY -= bodyLineHeight;
   }
 
   const emailValue = String(email || "").trim();
