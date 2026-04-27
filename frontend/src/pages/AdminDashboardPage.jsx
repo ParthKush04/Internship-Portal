@@ -484,20 +484,28 @@ function AdminDashboardPage() {
       application.status === "cancelled";
     const isCancelled = application.status === "cancelled";
     const normalizedInternshipStatus = String(application.internship?.status || "").toLowerCase();
+    const isPendingApplication = application.status === "pending";
     const showInternshipTimeline =
-      application.status === "shortlisted" ||
-      application.status === "active" ||
-      application.status === "completed" ||
-      application.status === "ongoing" ||
-      ["active", "ongoing", "extended", "completed"].includes(normalizedInternshipStatus);
-    const canMarkAsComplete = !isCancelled && ["active", "ongoing", "extended"].includes(normalizedInternshipStatus);
+      !isPendingApplication && (
+        application.status === "shortlisted" ||
+        application.status === "active" ||
+        application.status === "completed" ||
+        application.status === "ongoing" ||
+        ["active", "ongoing", "extended", "completed"].includes(normalizedInternshipStatus)
+      );
+    const canMarkAsComplete =
+      !isPendingApplication &&
+      !isCancelled &&
+      ["active", "ongoing", "extended"].includes(normalizedInternshipStatus);
     const canShowExtendButton =
+      !isPendingApplication &&
       !isCancelled && (
         application.status === "shortlisted" ||
         application.status === "ongoing" ||
         normalizedInternshipStatus === "ongoing"
       );
     const canCancelInternship =
+      !isPendingApplication &&
       !isCancelled && (
         application.status === "shortlisted" ||
         application.status === "ongoing" ||
