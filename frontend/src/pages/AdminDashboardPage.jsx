@@ -510,7 +510,7 @@ function AdminDashboardPage() {
         className="bg-white rounded-xl shadow hover:shadow-lg transition-shadow p-6"
       >
         {/* Header */}
-        <div className="flex justify-between items-start mb-4">
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-slate-900">
               {application.firstName} {application.lastName}
@@ -609,7 +609,7 @@ function AdminDashboardPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <button
                 type="button"
                 onClick={() => shortlistCandidate(application._id)}
@@ -674,7 +674,7 @@ function AdminDashboardPage() {
                     <option value="3 months">3 months</option>
                   </select>
 
-                  <div className="mt-3 flex gap-2">
+                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <button
                       type="button"
                       onClick={() => extendInternship(application._id)}
@@ -772,11 +772,11 @@ function AdminDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 py-12">
+    <div className="min-h-screen bg-white text-gray-900 py-10 sm:py-12">
       <div className="mx-auto max-w-6xl px-4">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h1>
+        <h1 className="mb-8 text-2xl font-bold text-gray-900 sm:text-3xl">Admin Dashboard</h1>
 
-        <div className="mb-6 flex justify-end">
+        <div className="mb-6 flex justify-start sm:justify-end">
           <button
             type="button"
             onClick={openWeeklyReportsModal}
@@ -786,7 +786,7 @@ function AdminDashboardPage() {
           </button>
         </div>
 
-        <section className="mb-8 grid grid-cols-2 md:grid-cols-5 gap-6">
+        <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:gap-6">
           <article className="rounded-xl border border-slate-200 bg-white p-5 shadow">
             <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-xl">📄</div>
             <p className="text-sm font-medium text-slate-600">Total Applications</p>
@@ -875,7 +875,7 @@ function AdminDashboardPage() {
 
         {cancelModal.isOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
-            <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-2xl sm:p-6">
               <h2 className="text-xl font-bold text-slate-900">Cancel Internship</h2>
               <p className="mt-2 text-sm text-slate-600">
                 {cancelModal.applicationName ? `Application: ${cancelModal.applicationName}` : "Enter the cancellation reason below."}
@@ -892,7 +892,7 @@ function AdminDashboardPage() {
                 placeholder="Explain why this internship is being cancelled"
               />
 
-              <div className="mt-6 flex gap-3">
+              <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <button
                   type="button"
                   onClick={submitCancelInternship}
@@ -917,7 +917,7 @@ function AdminDashboardPage() {
         {weeklyReportsModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-6">
             <div className="flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
-              <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5">
+              <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-4 py-4 sm:px-6 sm:py-5">
                 <div>
                   <h2 className="text-2xl font-bold text-slate-900">Weekly Reports</h2>
                   <p className="mt-1 text-sm text-slate-600">Review and annotate weekly log submissions.</p>
@@ -931,7 +931,7 @@ function AdminDashboardPage() {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-6 py-5">
+              <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
                 {weeklyLogsLoading ? (
                   <div className="flex h-full items-center justify-center py-20">
                     <Spinner />
@@ -974,7 +974,7 @@ function AdminDashboardPage() {
                           </button>
 
                           {isExpanded && (
-                            <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_320px]">
+                            <div className="mt-5 grid gap-4 xl:grid-cols-[1fr_320px]">
                               <div className="grid gap-4 md:grid-cols-2">
                                 <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-200">
                                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Tasks</p>

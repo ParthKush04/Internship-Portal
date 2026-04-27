@@ -119,10 +119,10 @@ function ApplicationFormPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 py-12">
+    <div className="min-h-screen bg-white text-gray-900 py-10 sm:py-12">
       <div className="mx-auto max-w-2xl px-4">
-        <div className="bg-white rounded-xl shadow p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Internship Application</h1>
+        <div className="bg-white rounded-xl shadow p-5 sm:p-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2 sm:text-3xl">Internship Application</h1>
           <p className="text-gray-600 mb-6">Join us at Provisioning Tech - Empowering students with real-world internship opportunities</p>
 
           {checkingStatus ? (

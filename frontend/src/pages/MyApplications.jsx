@@ -132,9 +132,9 @@ function MyApplications() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 py-12">
+    <div className="min-h-screen bg-gray-50 text-gray-900 py-10 sm:py-12">
       <div className="max-w-5xl mx-auto px-4">
-        <h1 className="mb-6 text-3xl font-bold text-gray-800">My Applications</h1>
+        <h1 className="mb-6 text-2xl font-bold text-gray-800 sm:text-3xl">My Applications</h1>
 
         {error && (
           <div className="mb-6 rounded-lg border border-red-300 bg-red-50 p-4 text-red-700">{error}</div>
@@ -208,7 +208,7 @@ function MyApplications() {
 
                     {showTimeline && isExpanded && hasTimelineData && (
                       <div className="mt-4 rounded-lg p-4 ring-1 bg-gray-50 ring-gray-200">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                           {hasStartDate && (
                             <div>
                               <p className="text-xs font-medium text-gray-500">Start Date</p>

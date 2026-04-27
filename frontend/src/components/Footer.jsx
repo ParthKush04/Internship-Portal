@@ -72,7 +72,7 @@ function Footer() {
       </div>
 
       <div className="border-t border-gray-200">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 text-xs text-gray-500">
+        <div className="mx-auto flex max-w-6xl flex-col items-start gap-2 px-4 py-4 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between">
           <span>© {new Date().getFullYear()} Provisioning Tech. All rights reserved.</span>
           <span>Built for internship excellence</span>
         </div>

@@ -172,9 +172,9 @@ function MyWeeklyReportsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 py-12">
+    <div className="min-h-screen bg-slate-50 text-slate-900 py-10 sm:py-12">
       <div className="mx-auto max-w-6xl px-4">
-        <div className="mb-10 overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 px-6 py-8 text-white shadow-xl md:px-10">
+        <div className="mb-10 overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 px-5 py-7 text-white shadow-xl sm:px-6 md:px-10">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-indigo-200">Weekly tracking</p>
           <h1 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">My Weekly Reports</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-200 md:text-base">
@@ -371,7 +371,7 @@ function MyWeeklyReportsPage() {
                         </span>
                       </div>
 
-                      <div className="mt-4 flex items-center justify-between gap-3">
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                         <p className="text-sm text-slate-600">
                           {typeof log.hoursWorked === "number" ? `${log.hoursWorked} hours worked` : "Hours not recorded"}
                         </p>
@@ -393,8 +393,8 @@ function MyWeeklyReportsPage() {
         )}
 
         {selectedLog && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4">
-            <div className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-6">
+            <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-5 shadow-2xl sm:p-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-600">Weekly log details</p>

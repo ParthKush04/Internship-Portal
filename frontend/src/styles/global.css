@@ -11,4 +11,5 @@
 body {
   @apply bg-white text-gray-900 antialiased leading-relaxed transition-colors duration-300;
   font-family: "Inter", sans-serif;
+  overflow-x: hidden;
 }

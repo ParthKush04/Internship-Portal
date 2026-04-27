@@ -61,7 +61,7 @@ function ApplicationDetailsPage() {
   const title = internship?.title || application?.internshipDomain || application?.assignedInternship || "Internship Program";
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 py-12">
+    <div className="min-h-screen bg-white text-gray-900 py-10 sm:py-12">
       <div className="mx-auto max-w-3xl px-4">
         <button
           type="button"
@@ -78,8 +78,8 @@ function ApplicationDetailsPage() {
         {loading ? (
           <Spinner />
         ) : application ? (
-          <article className="rounded-xl border border-gray-200 bg-white p-6 shadow-md">
-            <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
+          <article className="rounded-xl border border-gray-200 bg-white p-5 shadow-md sm:p-6">
+            <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">{title}</h1>
 
             <p className="mt-2 text-sm text-slate-600">
               Status: <span className="font-semibold capitalize">{normalizedStatus || "pending"}</span>

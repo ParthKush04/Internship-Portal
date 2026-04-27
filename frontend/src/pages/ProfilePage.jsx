@@ -250,7 +250,7 @@ function ProfilePage() {
     <div className="min-h-screen bg-gray-50 text-gray-900 py-12">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <div className="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-100 to-indigo-100 px-6 py-8 text-gray-800">
+          <div className="bg-gradient-to-r from-blue-100 to-indigo-100 px-5 py-7 text-gray-800 sm:px-6 sm:py-8">
             <div className="flex flex-col items-center gap-4 text-center md:flex-row md:text-left">
               <div className="h-24 w-24 rounded-full bg-white border-4 border-white shadow-md flex items-center justify-center text-3xl font-bold text-gray-800">
                 {profileData?.avatarUrl ? (
@@ -292,8 +292,8 @@ function ProfilePage() {
             </div>
           </div>
 
-          <div className="p-6 md:p-8">
-            <div className="mb-6 flex items-center justify-between gap-3">
+          <div className="p-5 md:p-8">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-lg font-semibold text-gray-800">Personal Information</h2>
               <button
                 onClick={() => setIsEditModalOpen(true)}
@@ -356,8 +356,8 @@ function ProfilePage() {
       </div>
 
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
+          <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-5 shadow-xl sm:p-6">
             <h3 className="text-xl font-semibold text-gray-800">Edit Profile</h3>
             <p className="mt-1 text-sm text-gray-500">Update your personal details.</p>
 

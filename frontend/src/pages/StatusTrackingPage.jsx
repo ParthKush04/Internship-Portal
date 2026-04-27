@@ -55,9 +55,9 @@ function StatusTrackingPage() {
   const internship = statusData?.internship;
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 py-12">
+    <div className="min-h-screen bg-white text-gray-900 py-10 sm:py-12">
       <div className="mx-auto max-w-6xl px-4">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Status Tracking</h1>
+        <h1 className="mb-8 text-2xl font-bold text-gray-900 sm:text-3xl">Status Tracking</h1>
 
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-300 text-red-700 rounded-lg flex items-center gap-2">
@@ -71,7 +71,7 @@ function StatusTrackingPage() {
         {!loading && !error && (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {/* Application Status Card */}
-            <article className="bg-white rounded-xl shadow hover:shadow-lg transition-shadow p-6">
+            <article className="bg-white rounded-xl shadow hover:shadow-lg transition-shadow p-5 sm:p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Application Status</h3>
               {applicationStatus ? (
                 <>
@@ -98,7 +98,7 @@ function StatusTrackingPage() {
             </article>
 
             {/* Internship Details Card */}
-            <article className="bg-white rounded-xl shadow hover:shadow-lg transition-shadow p-6">
+            <article className="bg-white rounded-xl shadow hover:shadow-lg transition-shadow p-5 sm:p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Internship Details</h3>
               <div className="space-y-3 text-sm text-gray-700">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-2">

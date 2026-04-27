@@ -35,9 +35,9 @@ function RegisterPage() {
 	};
 
 	return (
-		<div className="min-h-screen bg-white text-gray-900 flex items-center justify-center px-4 py-12">
-			<div className="bg-white rounded-xl shadow p-8 max-w-md w-full">
-				<h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">Register</h1>
+		<div className="min-h-screen bg-white text-gray-900 flex items-center justify-center px-4 py-10 sm:py-12">
+			<div className="bg-white rounded-xl shadow p-6 sm:p-8 max-w-md w-full">
+				<h1 className="text-2xl font-bold text-gray-900 mb-6 text-center sm:text-3xl">Register</h1>
 
 				<form onSubmit={onSubmit} className="space-y-4">
 					<div>
