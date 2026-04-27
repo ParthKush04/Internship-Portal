@@ -3,76 +3,218 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
+const BODY = 11;
+const NARROW = 10;
+const PAGE3_SAFE_Y = 643;
+const OFFER_SALARY_MIN_PTS = 7;
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const normalizeText = (value) => String(value || "").replace(/\s+/g, " ").trim();
-
-const drawLine = (page, font, text, x, y, size = 11, wipeWidth = 520) => {
+const whiteout = (page, x, yBaseline, width, fontSize) => {
+  const descenderPad = 2.5;
+  const ascender = fontSize * 0.85;
   page.drawRectangle({
     x: x - 2,
-    y: y - 3,
-    width: wipeWidth,
-    height: size + 6,
-    color: rgb(1, 1, 1)
+    y: yBaseline - descenderPad,
+    width,
+    height: ascender + descenderPad,
+    color: rgb(1, 1, 1),
+    borderWidth: 0
   });
-  page.drawText(text, { x, y, size, font, color: rgb(0, 0, 0) });
 };
 
-const wrapLines = (font, text, size, maxWidth) => {
-  const words = normalizeText(text).split(" ").filter(Boolean);
-  const lines = [];
-  let current = "";
+const drawLine = (page, font, text, x, yBaseline, size, coverWidth) => {
+  whiteout(page, x, yBaseline, coverWidth, size);
+  page.drawText(text, { x, y: yBaseline, size, font, color: rgb(0, 0, 0) });
+};
 
-  for (const word of words) {
-    const next = current ? `${current} ${word}` : word;
-    if (font.widthOfTextAtSize(next, size) <= maxWidth) {
-      current = next;
-    } else {
-      if (current) {
-        lines.push(current);
+const wrapToWidth = (font, text, size, maxWidth, maxLines) => {
+  const words = String(text || "").split(/\s+/).filter(Boolean);
+  const lines = [];
+  let idx = 0;
+
+  while (idx < words.length && lines.length < maxLines) {
+    let line = words[idx];
+    idx += 1;
+
+    while (idx < words.length) {
+      const next = `${line} ${words[idx]}`;
+      if (font.widthOfTextAtSize(next, size) <= maxWidth) {
+        line = next;
+        idx += 1;
+      } else {
+        break;
       }
-      current = word;
+    }
+
+    lines.push(line);
+  }
+
+  if (idx < words.length && lines.length > 0) {
+    let last = lines[lines.length - 1];
+    const ell = "...";
+    while (last.length > 0 && font.widthOfTextAtSize(last + ell, size) > maxWidth) {
+      last = last.slice(0, -1);
+    }
+    lines[lines.length - 1] = last + ell;
+  }
+
+  return lines.length > 0 ? lines : [String(text || "")];
+};
+
+const wrapAfterFixedPrefix = (font, prefix, suffix, size, maxWidth, maxLines) => {
+  const suffixNorm = String(suffix || "").replace(/\s+/g, " ").trim();
+  const words = suffixNorm ? suffixNorm.split(/\s+/).filter(Boolean) : [];
+  const prefixWidth = font.widthOfTextAtSize(prefix, size);
+
+  if (prefixWidth > maxWidth) {
+    return wrapToWidth(font, `${prefix}${suffixNorm}`, size, maxWidth, maxLines);
+  }
+
+  if (words.length === 0) {
+    return [prefix];
+  }
+
+  const lines = [];
+  let line = prefix;
+  let wi = 0;
+
+  while (wi < words.length) {
+    const candidate = line === prefix ? `${prefix}${words[wi]}` : `${line} ${words[wi]}`;
+    if (font.widthOfTextAtSize(candidate, size) <= maxWidth) {
+      line = candidate;
+      wi += 1;
+    } else {
+      break;
     }
   }
 
-  if (current) {
-    lines.push(current);
+  if (wi === 0) {
+    lines.push(prefix);
+  } else {
+    lines.push(line);
   }
 
-  return lines;
+  while (wi < words.length && lines.length < maxLines) {
+    let nextLine = words[wi];
+    wi += 1;
+
+    while (wi < words.length) {
+      const candidate = `${nextLine} ${words[wi]}`;
+      if (font.widthOfTextAtSize(candidate, size) <= maxWidth) {
+        nextLine = candidate;
+        wi += 1;
+      } else {
+        break;
+      }
+    }
+
+    lines.push(nextLine);
+  }
+
+  if (wi < words.length && lines.length > 0) {
+    let last = lines[lines.length - 1];
+    const ell = "...";
+    while (last.length > 0 && font.widthOfTextAtSize(last + ell, size) > maxWidth) {
+      last = last.slice(0, -1);
+    }
+    lines[lines.length - 1] = last + ell;
+  }
+
+  return lines.length > 0 ? lines : [prefix];
 };
 
-const drawParagraph = (page, font, text, x, yStart, size = 11, maxWidth = 500, lineGap = 13) => {
-  const lines = wrapLines(font, text, size, maxWidth);
-  const totalHeight = Math.max(1, lines.length) * lineGap + 8;
+const appendSalarySameLine = (font, lines, salaryLine, maxWidth, bodySize) => {
+  const tailNorm = String(salaryLine || "").replace(/\s+/g, " ").trim();
+  const out = lines.map((text) => ({ text, size: bodySize }));
+
+  if (!tailNorm) {
+    return out;
+  }
+
+  if (out.length === 0) {
+    return wrapToWidth(font, tailNorm, bodySize, maxWidth, 6).map((text) => ({ text, size: bodySize }));
+  }
+
+  const last = out[out.length - 1]?.text || "";
+  const glue = last.endsWith(" ") ? "" : " ";
+  const merged = `${last}${glue}${tailNorm}`;
+
+  let size = bodySize;
+  while (size > OFFER_SALARY_MIN_PTS && font.widthOfTextAtSize(merged, size) > maxWidth) {
+    size -= 0.25;
+  }
+
+  if (font.widthOfTextAtSize(merged, size) <= maxWidth) {
+    out[out.length - 1] = { text: merged, size };
+    return out;
+  }
+
+  let trimmed = merged;
+  const ell = "...";
+  while (trimmed.length > 0 && font.widthOfTextAtSize(trimmed + ell, OFFER_SALARY_MIN_PTS) > maxWidth) {
+    trimmed = trimmed.slice(0, -1);
+  }
+
+  out[out.length - 1] = { text: trimmed + ell, size: OFFER_SALARY_MIN_PTS };
+  return out;
+};
+
+const drawAddressSafe = (page, font, address, x, yFirstBaseline, size, maxWidth) => {
+  const oneLine = `Address - ${String(address || "").replace(/\r\n/g, " ").replace(/\s+/g, " ").trim()}`;
+  const lineHeight = size * 1.12;
+
+  let lines = wrapToWidth(font, oneLine, size, maxWidth, 2);
+  let lastBaseline = yFirstBaseline - (lines.length - 1) * lineHeight;
+
+  if (lastBaseline < PAGE3_SAFE_Y) {
+    lines = wrapToWidth(font, oneLine, size, maxWidth, 1);
+    lastBaseline = yFirstBaseline;
+  }
+
+  const desc = 2.5;
+  const asc = size * 0.85;
+  const yBottom = Math.max(PAGE3_SAFE_Y - 1, lastBaseline - desc);
+  const yTopUncapped = yFirstBaseline + asc + 3;
+  const yTop = Math.min(yTopUncapped, 676.5);
 
   page.drawRectangle({
     x: x - 2,
-    y: yStart - totalHeight + 8,
-    width: maxWidth + 6,
-    height: totalHeight,
-    color: rgb(1, 1, 1)
+    y: yBottom,
+    width: maxWidth + 4,
+    height: yTop - yBottom,
+    color: rgb(1, 1, 1),
+    borderWidth: 0
   });
 
-  let y = yStart;
-  for (const line of lines) {
-    page.drawText(line, { x, y, size, font, color: rgb(0, 0, 0) });
-    y -= lineGap;
+  let yy = yFirstBaseline;
+  for (const ln of lines) {
+    page.drawText(ln, { x, y: yy, size, font, color: rgb(0, 0, 0) });
+    yy -= lineHeight;
   }
 };
 
+const drawInline = (page, font, text, x, yBaseline, size, coverWidth) => {
+  whiteout(page, x, yBaseline, coverWidth, size);
+  page.drawText(text, { x, y: yBaseline, size, font, color: rgb(0, 0, 0) });
+};
+
 export const generateOfferLetterFromTemplate = async ({
-  refNo,
-  studentName,
-  role,
-  startDate,
-  duration,
-  address = "Provisioning Tech",
+  refNo = "",
+  offerAsOn = "",
+  month = "",
+  name = "",
+  address = "",
+  subject = "",
+  salary = "",
   email = "",
-  mobile = ""
+  mobile = "",
+  offsetX = 0,
+  offsetY = 0
 }) => {
   const templatePath = path.resolve(__dirname, "..", "templates", "offer-letter-template.pdf");
+
   if (!fs.existsSync(templatePath)) {
     throw new Error(`Offer letter template not found at ${templatePath}`);
   }
@@ -81,39 +223,93 @@ export const generateOfferLetterFromTemplate = async ({
   const doc = await PDFDocument.load(templateBytes);
   const pages = doc.getPages();
 
-  if (pages.length < 5) {
-    throw new Error("Offer letter template must have at least 5 pages");
-  }
-
   const page2 = pages[1];
   const page3 = pages[2];
   const page5 = pages[4];
+
+  if (!page2 || !page3 || !page5) {
+    throw new Error("Template must have at least 5 pages (offer letter format)");
+  }
+
   const font = await doc.embedFont(StandardFonts.Helvetica);
 
-  const formattedStart = new Date(startDate).toLocaleDateString("en-GB");
-  const normalizedRole = normalizeText(role) || "Intern";
-  const name = normalizeText(studentName) || "Student";
-  const normalizedDuration = normalizeText(duration) || "3 Months";
-  const normalizedRef = normalizeText(refNo);
+  const ox = Number(offsetX) || 0;
+  const oy = Number(offsetY) || 0;
 
-  if (normalizedRef) {
-    drawLine(page2, font, `REF NO: ${normalizedRef}`, 26.4, 693.2, 11, 520);
+  const ref = String(refNo || "").trim();
+  if (ref) {
+    drawLine(page2, font, `REF NO: ${ref}`, 26.4 + ox, 693.2 + oy, BODY, 520);
   }
 
-  drawLine(page3, font, `Name - ${name}`, 49.6, 678.1, 11, 520);
-  drawLine(page3, font, `Address - ${normalizeText(address) || "Provisioning Tech"}`, 49.6, 664.3, 11, 500);
-  drawLine(page3, font, `Dear, ${name}`, 49.6, 622.9, 11, 520);
-  drawLine(page3, font, `SUB: Internship Offer Letter - ${normalizedRole}`, 49.6, 595.3, 11, 520);
-
-  const paragraph = `This has reference to your application for internship. The Company is pleased to offer you as ${normalizedRole} with effect from ${formattedStart} for a duration of ${normalizedDuration}.`;
-  drawParagraph(page3, font, paragraph, 49.6, 568.4, 11, 500, 13);
-
-  drawLine(page5, font, name, 90.5, 324.4, 11, 220);
-  if (normalizeText(email)) {
-    drawLine(page5, font, normalizeText(email), 89.1, 311.9, 10, 340);
+  const candidateName = String(name || "").trim();
+  if (candidateName) {
+    drawLine(page3, font, `Name - ${candidateName}`, 49.6 + ox, 678.1 + oy, BODY, 520);
+    drawLine(page3, font, `Dear, ${candidateName}`, 49.6 + ox, 622.9 + oy, BODY, 520);
+    drawInline(page5, font, candidateName, 90.5 + ox, 324.4 + oy, BODY, 220);
   }
-  if (normalizeText(mobile)) {
-    drawLine(page5, font, normalizeText(mobile), 91.9, 299.5, 10, 260);
+
+  const fullAddress = String(address || "").trim();
+  if (fullAddress) {
+    drawAddressSafe(page3, font, fullAddress, 49.6 + ox, 664.3 + oy, BODY, 500);
+  }
+
+  const subjectText = String(subject || "").trim();
+  if (subjectText) {
+    drawLine(page3, font, `SUB: ${subjectText}`, 49.6 + ox, 595.3 + oy, BODY, 520);
+  }
+
+  const offerValue = String(offerAsOn || "").trim();
+  const salaryValue = String(salary || "").trim();
+  const monthValue = String(month || "").trim();
+
+  const offerX = 49.6 + ox;
+  const offerTopBaseline = 568.4 + oy;
+  const offerMaxWidth = 500;
+  const offerLineHeight = BODY * 1.12;
+  const offerPrefix = "This has reference to your application for employment, the Company is pleased to offer you as on ";
+
+  const offerLines = wrapAfterFixedPrefix(font, offerPrefix, offerValue, BODY, offerMaxWidth, 6);
+
+  const salaryLine = `On Salary of Rs - ${salaryValue}/- for ${monthValue} month and there after depend on Performance with effect.`;
+
+  const blockLines = appendSalarySameLine(font, offerLines, salaryLine, offerMaxWidth, BODY);
+
+  const desc = 3;
+  const asc = BODY * 0.85;
+  const lastBaseline = offerTopBaseline - (blockLines.length - 1) * offerLineHeight;
+  const blockTop = offerTopBaseline + asc + 2;
+  const blockBottom = lastBaseline - desc;
+
+  page3.drawRectangle({
+    x: 40 + ox,
+    y: blockBottom,
+    width: 550,
+    height: blockTop - blockBottom,
+    color: rgb(1, 1, 1),
+    borderWidth: 0
+  });
+
+  let offerY = offerTopBaseline;
+  for (const { text, size } of blockLines) {
+    page3.drawText(text, {
+      x: offerX,
+      y: offerY,
+      size,
+      font,
+      color: rgb(0, 0, 0)
+    });
+    offerY -= offerLineHeight;
+  }
+
+  const emailValue = String(email || "").trim();
+  if (emailValue) {
+    drawInline(page5, font, emailValue, 89.1 + ox, 311.9 + oy, NARROW, 340);
+  }
+
+  const mobileValue = String(mobile || "").trim();
+  if (mobileValue) {
+    const mobileLine = mobileValue.startsWith("+") || mobileValue.startsWith("91") ? mobileValue : `+91-${mobileValue}`;
+    drawInline(page5, font, mobileLine, 91.9 + ox, 299.5 + oy, NARROW, 260);
   }
 
   return doc.save();

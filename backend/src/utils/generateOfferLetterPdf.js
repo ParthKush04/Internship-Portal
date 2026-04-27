@@ -87,11 +87,12 @@ export const generateOfferLetterPdf = async ({
     try {
       const templatePdfBytes = await generateOfferLetterFromTemplate({
         refNo: refNumber,
-        studentName: templateData.name,
-        role: templateData.internshipType,
-        startDate,
-        duration,
+        offerAsOn: templateData.internshipType,
+        month: String(templateData.duration || "").trim(),
+        name: templateData.name,
         address: "Provisioning Tech",
+        subject: `Internship Offer Letter - ${templateData.internshipType}`,
+        salary: "0",
         email: "",
         mobile: ""
       });
