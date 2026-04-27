@@ -161,40 +161,6 @@ const appendSalarySameLine = (font, lines, salaryLine, maxWidth, bodySize) => {
   return out;
 };
 
-const drawAddressSafe = (page, font, address, x, yFirstBaseline, size, maxWidth) => {
-  const oneLine = `Address - ${String(address || "").replace(/\r\n/g, " ").replace(/\s+/g, " ").trim()}`;
-  const lineHeight = size * 1.12;
-
-  let lines = wrapToWidth(font, oneLine, size, maxWidth, 2);
-  let lastBaseline = yFirstBaseline - (lines.length - 1) * lineHeight;
-
-  if (lastBaseline < PAGE3_SAFE_Y) {
-    lines = wrapToWidth(font, oneLine, size, maxWidth, 1);
-    lastBaseline = yFirstBaseline;
-  }
-
-  const desc = 2.5;
-  const asc = size * 0.85;
-  const yBottom = Math.max(PAGE3_SAFE_Y - 1, lastBaseline - desc);
-  const yTopUncapped = yFirstBaseline + asc + 3;
-  const yTop = Math.min(yTopUncapped, 676.5);
-
-  page.drawRectangle({
-    x: x - 2,
-    y: yBottom,
-    width: maxWidth + 4,
-    height: yTop - yBottom,
-    color: rgb(1, 1, 1),
-    borderWidth: 0
-  });
-
-  let yy = yFirstBaseline;
-  for (const ln of lines) {
-    page.drawText(ln, { x, y: yy, size, font, color: rgb(0, 0, 0) });
-    yy -= lineHeight;
-  }
-};
-
 const drawInline = (page, font, text, x, yBaseline, size, coverWidth) => {
   whiteout(page, x, yBaseline, coverWidth, size);
   page.drawText(text, { x, y: yBaseline, size, font, color: rgb(0, 0, 0) });
@@ -206,7 +172,6 @@ export const generateOfferLetterFromTemplate = async ({
   startDate = "",
   month = "",
   name = "",
-  address = "",
   subject = "",
   salary = "",
   email = "",
@@ -253,16 +218,6 @@ export const generateOfferLetterFromTemplate = async ({
     drawLine(page3, font, `Dear, Mr. ${candidateName}`, 49.6 + ox, 622.9 + oy, BODY, 520);
     drawInline(page5, font, candidateName, 90.5 + ox, 324.4 + oy, BODY, 220);
   }
-
-  // Clear any prior injected address region to keep output aligned with reference format.
-  page3.drawRectangle({
-    x: 47 + ox,
-    y: 655 + oy,
-    width: 510,
-    height: 18,
-    color: rgb(1, 1, 1),
-    borderWidth: 0
-  });
 
   const subjectText = String(subject || "").trim();
   if (subjectText) {

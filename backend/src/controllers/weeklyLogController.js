@@ -110,7 +110,10 @@ const getWeeklyLogsByApplication = async (req, res, next) => {
       return res.status(403).json({ message: "You are not allowed to view logs for this application" });
     }
 
-    const weeklyLogs = await WeeklyLog.find({ applicationId }).sort({ weekStartDate: -1, createdAt: -1 });
+    const weeklyLogs = await WeeklyLog.find({ applicationId })
+      .populate("studentId", "name email role")
+      .populate("applicationId", "firstName lastName college status assignedInternship")
+      .sort({ weekStartDate: -1, createdAt: -1 });
 
     res.json({
       applicationId,
