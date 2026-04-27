@@ -265,9 +265,10 @@ function ProfilePage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold leading-tight">
-                  {profileData?.firstName && profileData?.lastName
-                    ? `${profileData.firstName} ${profileData.lastName}`
-                    : profileData?.name}
+                  {profileData?.name ||
+                    (profileData?.firstName && profileData?.lastName
+                      ? `${profileData.firstName} ${profileData.lastName}`
+                      : "User")}
                 </h1>
                 <span className="mt-2 inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
                   Student

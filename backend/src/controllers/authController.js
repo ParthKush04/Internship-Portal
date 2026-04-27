@@ -190,18 +190,28 @@ const getMe = async (req, res, next) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      college: user.college || "",
+      phone: user.phone || "",
+      skills: Array.isArray(user.skills) ? user.skills : [],
       googleId: user.googleId,
       avatarUrl: user.avatarUrl,
       createdAt: user.createdAt
     };
 
-    // Add application details if available
+    // Add application details if available, but do not override user profile updates.
     if (application) {
       profile.firstName = application.firstName;
       profile.lastName = application.lastName;
-      profile.college = application.college;
       profile.contactDetails = application.contactDetails;
-      profile.skills = application.skills;
+      if (!profile.college && application.college) {
+        profile.college = application.college;
+      }
+      if ((!Array.isArray(profile.skills) || profile.skills.length === 0) && Array.isArray(application.skills)) {
+        profile.skills = application.skills;
+      }
+      if (!profile.phone && application?.contactDetails?.phone) {
+        profile.phone = application.contactDetails.phone;
+      }
       profile.applicationStatus = application.status;
     }
 
