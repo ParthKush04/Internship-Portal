@@ -3,11 +3,43 @@ import puppeteer from "puppeteer";
 export const generatePdf = async (html) => {
   let browser;
   try {
-    console.log("Launching Puppeteer browser...");
-    browser = await puppeteer.launch({ 
-      headless: "new",
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-    });
+    const sharedArgs = ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"];
+    const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || undefined;
+    const launchOptionsList = [
+      {
+        headless: "new",
+        args: sharedArgs,
+        executablePath
+      },
+      {
+        headless: true,
+        args: sharedArgs,
+        executablePath
+      },
+      {
+        headless: true,
+        args: sharedArgs
+      }
+    ];
+
+    let launchError;
+    for (const launchOptions of launchOptionsList) {
+      try {
+        console.log("Launching Puppeteer browser with options:", {
+          headless: launchOptions.headless,
+          executablePath: launchOptions.executablePath ? "provided" : "default"
+        });
+        browser = await puppeteer.launch(launchOptions);
+        break;
+      } catch (error) {
+        launchError = error;
+        console.warn("Puppeteer launch attempt failed:", error.message);
+      }
+    }
+
+    if (!browser) {
+      throw launchError || new Error("Failed to launch Puppeteer browser");
+    }
 
     console.log("Browser launched, creating new page...");
     const page = await browser.newPage();
