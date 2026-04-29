@@ -14,7 +14,8 @@ const sendResetPasswordEmail = async ({ to, name, resetUrl }) => {
     }
 
   const mailOptions = {
-    from: GMAIL_USER,
+    from: `Provisioning Tech <${GMAIL_USER}>`,
+    replyTo: GMAIL_USER,
     to: String(to).toLowerCase().trim(),
     subject: "Reset Your Provisioning Tech Password",
     html: `
@@ -57,7 +58,20 @@ const sendResetPasswordEmail = async ({ to, name, resetUrl }) => {
   };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log("✅ Password reset email sent via Nodemailer to", to, "- Message ID:", info.messageId);
+    const accepted = Array.isArray(info.accepted) && info.accepted.includes(String(to).toLowerCase().trim());
+    const rejected = Array.isArray(info.rejected) ? info.rejected : [];
+
+    if (!accepted || rejected.length > 0) {
+      console.error("❌ Password reset email was not accepted by SMTP", {
+        to,
+        accepted: info.accepted,
+        rejected: info.rejected,
+        response: info.response
+      });
+      return false;
+    }
+
+    console.log("✅ Password reset email accepted by Nodemailer to", to, "- Message ID:", info.messageId);
     return true;
   } catch (error) {
     console.error("❌ Nodemailer Error:", error.message);
