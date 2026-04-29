@@ -18,6 +18,7 @@ console.log("✅ Gmail User loaded:", !!process.env.GMAIL_USER);
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import connectDB from "./config/db.js";
+import initializeSendGrid from "./config/sendGrid.js";
 
 // Use dynamic import for app to ensure dotenv is ready
 let app;
@@ -36,6 +37,7 @@ const startApp = async () => {
   const PORT = process.env.PORT || 5000;
 
   try {
+    initializeSendGrid();
     await connectDB();
     app.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);

@@ -1,4 +1,4 @@
-import transporter from "./transporter.js";
+import { resolveFromEmail, sgMail } from "../config/sendGrid.js";
 
 const sendCertificateEmail = async ({
   to,
@@ -12,9 +12,9 @@ const sendCertificateEmail = async ({
   }
 
   try {
-    const fromEmail = String(process.env.MAIL_FROM || process.env.SMTP_USER || process.env.GMAIL_USER || "").trim();
+    const fromEmail = resolveFromEmail();
     if (!fromEmail) {
-      console.error("❌ MAIL_FROM/SMTP_USER/GMAIL_USER not configured");
+      console.error("❌ SENDGRID_FROM_EMAIL/MAIL_FROM/SMTP_USER/GMAIL_USER not configured");
       return false;
     }
 
@@ -72,22 +72,23 @@ const sendCertificateEmail = async ({
       attachments: [
         {
           filename: "certificate.pdf",
-          content: pdfBuffer,
-          contentType: "application/pdf"
+          content: Buffer.isBuffer(pdfBuffer) ? pdfBuffer.toString("base64") : Buffer.from(pdfBuffer).toString("base64"),
+          type: "application/pdf",
+          disposition: "attachment"
         }
       ]
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log("✅ Certificate email sent via Nodemailer to", to, "- Message ID:", info.messageId);
+    const [info] = await sgMail.send(mailOptions);
+    console.log("✅ Certificate email sent via SendGrid to", to, "- Message ID:", info?.headers?.["x-message-id"] || info?.headers?.["X-Message-Id"] || "n/a");
     return true;
   } catch (error) {
-    console.error("❌ Nodemailer Error:", error.message);
+    console.error("❌ SendGrid Error:", error.message);
     if (error?.response) {
-      console.error("SMTP response:", error.response);
+      console.error("SendGrid response:", error.response.body || error.response);
     }
     if (error?.code) {
-      console.error("SMTP code:", error.code);
+      console.error("SendGrid code:", error.code);
     }
     return false;
   }

@@ -1,4 +1,4 @@
-import transporter from "./transporter.js";
+import { resolveFromEmail, sgMail } from "../config/sendGrid.js";
 
 const sendResetPasswordEmail = async ({ to, name, resetUrl }) => {
   if (!to || !resetUrl) {
@@ -7,17 +7,17 @@ const sendResetPasswordEmail = async ({ to, name, resetUrl }) => {
   }
 
   try {
-    const fromEmail = String(process.env.MAIL_FROM || process.env.SMTP_USER || process.env.GMAIL_USER || "").trim();
+    const fromEmail = resolveFromEmail();
     if (!fromEmail) {
-      console.error("❌ MAIL_FROM/SMTP_USER/GMAIL_USER not configured");
+      console.error("❌ SENDGRID_FROM_EMAIL/MAIL_FROM/SMTP_USER/GMAIL_USER not configured");
       return false;
     }
 
-  const mailOptions = {
-    from: fromEmail,
-    to: String(to).toLowerCase().trim(),
-    subject: "Reset Your Provisioning Tech Password",
-    html: `
+    const mailOptions = {
+      from: fromEmail,
+      to: String(to).toLowerCase().trim(),
+      subject: "Reset Your Provisioning Tech Password",
+      html: `
       <!DOCTYPE html>
       <html>
         <head>
@@ -52,20 +52,20 @@ const sendResetPasswordEmail = async ({ to, name, resetUrl }) => {
           </div>
         </body>
       </html>
-    `,
-    text: `Dear ${name || "Student"},\n\nWe received a request to reset your Provisioning Tech account password.\n\nOpen this link to set a new password (expires in 1 hour):\n${resetUrl}\n\nIf you did not request this, you can ignore this email.\n\nBest regards,\nProvisioning Tech Team`
-  };
+      `,
+      text: `Dear ${name || "Student"},\n\nWe received a request to reset your Provisioning Tech account password.\n\nOpen this link to set a new password (expires in 1 hour):\n${resetUrl}\n\nIf you did not request this, you can ignore this email.\n\nBest regards,\nProvisioning Tech Team`
+    };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log("✅ Password reset email sent via Nodemailer to", to, "- Message ID:", info.messageId);
+    const [info] = await sgMail.send(mailOptions);
+    console.log("✅ Password reset email sent via SendGrid to", to, "- Message ID:", info?.headers?.["x-message-id"] || info?.headers?.["X-Message-Id"] || "n/a");
     return true;
   } catch (error) {
-    console.error("❌ Nodemailer Error:", error.message);
+    console.error("❌ SendGrid Error:", error.message);
     if (error?.response) {
-      console.error("SMTP response:", error.response);
+      console.error("SendGrid response:", error.response.body || error.response);
     }
     if (error?.code) {
-      console.error("SMTP code:", error.code);
+      console.error("SendGrid code:", error.code);
     }
     return false;
   }

@@ -1,4 +1,4 @@
-import transporter from "./transporter.js";
+import { resolveFromEmail, sgMail } from "../config/sendGrid.js";
 import { offerLetterTemplate } from "./offerLetterTemplate.js";
 
 const formatDate = (dateValue) => {
@@ -35,9 +35,9 @@ const sendCancellationEmail = async ({
   }
 
   try {
-    const { GMAIL_USER } = process.env;
-    if (!GMAIL_USER) {
-      console.error("GMAIL_USER not configured");
+    const fromEmail = resolveFromEmail();
+    if (!fromEmail) {
+      console.error("SENDGRID_FROM_EMAIL/MAIL_FROM/SMTP_USER/GMAIL_USER not configured");
       return false;
     }
 
@@ -53,7 +53,7 @@ const sendCancellationEmail = async ({
       duration: "Cancelled",
       refNumber: `CAN/${new Date().getFullYear()}/001`,
       hrContactName: "Human Resources Team",
-      hrContactEmail: GMAIL_USER,
+      hrContactEmail: fromEmail,
       hrContactPhone: ""
     });
 
@@ -99,18 +99,24 @@ const sendCancellationEmail = async ({
       );
 
     const mailOptions = {
-      from: GMAIL_USER,
+      from: fromEmail,
       to: String(to).toLowerCase().trim(),
       subject: "Internship Cancellation Notice - Provisioning Tech",
       html: cancellationHtml,
       text: `Dear ${studentName},\n\nYour internship has been cancelled.\n\nInternship: ${internshipType || "Internship Program"}\nCancelled On: ${formattedCancelledAt}\nReason: ${cancelReason || "Not provided"}\n\nIf you need clarification, please reply to this email.\n\nRegards,\nHuman Resources Team\nProvisioning Tech`
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log("Cancellation email sent to", to, "- Message ID:", info.messageId);
+    const [info] = await sgMail.send(mailOptions);
+    console.log("Cancellation email sent to", to, "- Message ID:", info?.headers?.["x-message-id"] || info?.headers?.["X-Message-Id"] || "n/a");
     return true;
   } catch (error) {
     console.error("Cancellation email send error:", error.message);
+    if (error?.response) {
+      console.error("SendGrid response:", error.response.body || error.response);
+    }
+    if (error?.code) {
+      console.error("SendGrid code:", error.code);
+    }
     return false;
   }
 };
