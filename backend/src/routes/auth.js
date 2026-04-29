@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { loginUser, registerUser, googleAuth, getMe, updateProfile, uploadAvatar } from "../controllers/authController.js";
+import { loginUser, registerUser, googleAuth, getMe, updateProfile, uploadAvatar, forgotPassword, resetPassword } from "../controllers/authController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { uploadAvatar as uploadAvatarMiddleware } from "../middleware/uploadMiddleware.js";
 import {
@@ -15,6 +15,8 @@ const router = Router();
 router.post("/register", registerValidationRules, handleValidationErrors, registerUser);
 router.post("/login", loginValidationRules, handleValidationErrors, loginUser);
 router.post("/google", googleAuthValidationRules, handleValidationErrors, googleAuth);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 router.get("/me", protect, getMe);
 router.put("/update-profile", protect, updateProfile);
 router.post(

@@ -2,6 +2,8 @@ import User from "../models/User.js";
 import Application from "../models/Application.js";
 import generateToken from "../utils/generateToken.js";
 import { OAuth2Client } from "google-auth-library";
+import crypto from "crypto";
+import sendResetPasswordEmail from "../utils/sendResetPasswordEmail.js";
 
 const parseJwtExpiryToMs = (expiresIn) => {
   if (!expiresIn) {
@@ -318,3 +320,88 @@ const uploadAvatar = async (req, res, next) => {
 };
 
 export { registerUser, loginUser, googleAuth, getMe, updateProfile, uploadAvatar };
+
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      res.status(400);
+      throw new Error("Email is required");
+    }
+
+    const user = await User.findOne({ email: String(email).toLowerCase().trim() });
+
+    // Do not reveal whether the user exists
+    if (!user) {
+      return res.json({ message: "If an account with that email exists, a reset link has been sent." });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const hashed = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+    user.resetPasswordToken = hashed;
+    user.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+    await user.save({ validateBeforeSave: false });
+
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+    const resetUrl = `${clientUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(user.email)}`;
+
+    try {
+      await sendResetPasswordEmail({ to: user.email, name: user.name, resetUrl });
+    } catch (emailErr) {
+      console.error("Failed to send reset email:", emailErr.message || emailErr);
+    }
+
+    res.json({ message: "If an account with that email exists, a reset link has been sent." });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const resetPassword = async (req, res, next) => {
+  try {
+    const { token, password, confirmPassword } = req.body;
+    if (!token || !password || !confirmPassword) {
+      res.status(400);
+      throw new Error("token, password and confirmPassword are required");
+    }
+
+    if (password !== confirmPassword) {
+      res.status(400);
+      throw new Error("Passwords do not match");
+    }
+
+    const hashed = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken: hashed,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      res.status(400);
+      throw new Error("Invalid or expired reset token");
+    }
+
+    user.password = password;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+    await user.save();
+
+    const jwtToken = generateToken(user._id, user.role, user.name);
+    setAuthCookie(res, jwtToken);
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatarUrl: user.avatarUrl,
+      token: jwtToken
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { forgotPassword, resetPassword };

@@ -10,6 +10,8 @@ import { useAuth } from "./context/AuthContext.jsx";
 const HomePage = lazy(() => import("./pages/HomePage.jsx"));
 const LoginPage = lazy(() => import("./pages/LoginPage.jsx"));
 const RegisterPage = lazy(() => import("./pages/RegisterPage.jsx"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage.jsx"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage.jsx"));
 const ApplicationFormPage = lazy(() => import("./pages/ApplicationFormPage.jsx"));
 const ApplicationDetailsPage = lazy(() => import("./pages/ApplicationDetailsPage.jsx"));
 const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage.jsx"));
@@ -54,6 +56,8 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/apply" element={<ProtectedRoute element={<ApplicationFormPage />} />} />
             <Route path="/applications/:id" element={<ProtectedRoute element={<ApplicationDetailsPage />} />} />
             <Route path="/admin" element={<RoleRoute allowedRole="admin" element={<AdminDashboardPage />} />} />
