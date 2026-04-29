@@ -76,6 +76,14 @@ const addDays = (dateInput, days) => {
   return date;
 };
 
+const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
+
+const resolveRecipientEmail = (application, student) => {
+  const contactEmail = normalizeEmail(application?.contactDetails?.email || application?.email);
+  const accountEmail = normalizeEmail(student?.email);
+  return contactEmail || accountEmail;
+};
+
 const triggerOfferLetterGeneration = async (application, startDate, duration, endDate) => {
   const studentId = application.studentId;
   const existingOfferLetter = await OfferLetter.findOne({ studentId });
@@ -106,18 +114,23 @@ const triggerOfferLetterGeneration = async (application, startDate, duration, en
     throw new Error("Student not found for offer letter email");
   }
 
+  const recipientEmail = resolveRecipientEmail(application, student);
+  if (!recipientEmail) {
+    throw new Error("Recipient email not found for offer letter email");
+  }
+
   // Send email 
-  console.log("Sending offer letter email to:", student.email);
+  console.log("Sending offer letter email to:", recipientEmail, "(account:", student.email, ")");
   console.log("Using file URL:", offerLetter.fileUrl);
   await sendOfferLetterEmail({
-    to: student.email,
+    to: recipientEmail,
     studentName,
     fileUrl: offerLetter.fileUrl,
     startDate,
     duration,
     assignedInternship: application.assignedInternship || "Internship"
   });
-  console.log("Offer letter email sent successfully to:", student.email);
+  console.log("Offer letter email sent successfully to:", recipientEmail);
 
   return offerLetter;
 };
@@ -406,7 +419,12 @@ const shortlistCandidate = async (req, res, next) => {
     }
 
     const student = application.studentId;
-    console.log("Student:", student.name, "Email:", student.email);
+    const recipientEmail = resolveRecipientEmail(application, student);
+    console.log("Student:", student.name, "Account Email:", student.email, "Recipient Email:", recipientEmail);
+
+    if (!recipientEmail) {
+      return res.status(400).json({ message: "Recipient email not found for this student" });
+    }
 
     // STEP 3: Calculate end date
     let calculatedEndDate;
@@ -462,7 +480,7 @@ const shortlistCandidate = async (req, res, next) => {
     // STEP 7: Send offer letter email (non-blocking - in background)
     console.log("========== QUEUING OFFER LETTER EMAIL ==========");
     sendOfferLetterEmail({
-      to: student.email,
+      to: recipientEmail,
       studentName: student.name,
       pdfBuffer: offerResult.pdfBuffer,
       startDate,
@@ -690,8 +708,14 @@ const completeInternshipForApplication = async (req, res, next) => {
     }
 
     const student = application.studentId;
+    const recipientEmail = resolveRecipientEmail(application, student);
     console.log("Student Name:", student.name);
-    console.log("Student Email:", student.email);
+    console.log("Student Account Email:", student.email);
+    console.log("Recipient Email:", recipientEmail);
+
+    if (!recipientEmail) {
+      return res.status(400).json({ message: "Recipient email not found for this student" });
+    }
 
     // STEP 2: Find internship and validate status
     const internship = await Internship.findOne({ studentId: student._id }).sort({ createdAt: -1 });
@@ -747,7 +771,7 @@ const completeInternshipForApplication = async (req, res, next) => {
     // STEP 5: Send certificate email (non-blocking - in background)
     console.log("========== QUEUING CERTIFICATE EMAIL ==========");
     sendCertificateEmail({
-      to: student.email,
+      to: recipientEmail,
       studentName: student.name,
       pdfBuffer
     }).catch((err) => {
