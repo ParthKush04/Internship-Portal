@@ -346,6 +346,8 @@ const forgotPassword = async (req, res, next) => {
     const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
     const resetUrl = `${clientUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(user.email)}`;
 
+    console.log(`✉️  Password reset requested for ${user.email} — resetUrl: ${resetUrl}`);
+
     try {
       await sendResetPasswordEmail({ to: user.email, name: user.name, resetUrl });
     } catch (emailErr) {

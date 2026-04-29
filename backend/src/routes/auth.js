@@ -12,6 +12,8 @@ import {
 
 const router = Router();
 
+console.log("🔐 Auth routes loaded and mounted at /api/auth");
+
 router.post("/register", registerValidationRules, handleValidationErrors, registerUser);
 router.post("/login", loginValidationRules, handleValidationErrors, loginUser);
 router.post("/google", googleAuthValidationRules, handleValidationErrors, googleAuth);
