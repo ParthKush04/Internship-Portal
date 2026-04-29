@@ -15,9 +15,9 @@ const sendOfferLetterEmail = async ({
   }
 
   try {
-    const { GMAIL_USER } = process.env;
-    if (!GMAIL_USER) {
-      console.error("❌ GMAIL_USER not configured");
+    const fromEmail = String(process.env.MAIL_FROM || process.env.SMTP_USER || process.env.GMAIL_USER || "").trim();
+    if (!fromEmail) {
+      console.error("❌ MAIL_FROM/SMTP_USER/GMAIL_USER not configured");
       return false;
     }
 
@@ -33,7 +33,7 @@ const sendOfferLetterEmail = async ({
     }
 
     const mailOptions = {
-      from: GMAIL_USER,
+      from: fromEmail,
       to: String(to).toLowerCase().trim(),
       subject: "Internship Offer Letter - Provisioning Tech",
       html: `
