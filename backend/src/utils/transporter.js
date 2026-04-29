@@ -6,12 +6,13 @@ const cleanSecret = (value) => String(value || "")
   .replace(/\s+/g, "");
 
 const smtpUser = String(process.env.SMTP_USER || process.env.GMAIL_USER || "").trim();
-const smtpPass = cleanSecret(process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || "");
+const smtpPass = String(process.env.SMTP_PASS || "").trim() || cleanSecret(process.env.GMAIL_APP_PASSWORD || "");
 const smtpHost = String(process.env.SMTP_HOST || "").trim();
 const smtpPort = Number(process.env.SMTP_PORT || 0);
 const smtpSecure = String(process.env.SMTP_SECURE || "").toLowerCase() === "true";
+const hasCustomSmtp = Boolean(smtpHost && smtpUser && smtpPass);
 
-const transportConfig = smtpHost
+const transportConfig = hasCustomSmtp
   ? {
       host: smtpHost,
       port: smtpPort || 587,
@@ -40,8 +41,12 @@ const transporter = nodemailer.createTransport({
 transporter.verify((error, success) => {
   if (error) {
     console.error("❌ Nodemailer Error:", error.message);
+    console.error("Nodemailer mode:", hasCustomSmtp ? "custom-smtp" : "gmail-service");
   } else if (success) {
-    console.log("✅ Nodemailer (Gmail/SMTP) is ready");
+    console.log("✅ Nodemailer (Gmail/SMTP) is ready", {
+      mode: hasCustomSmtp ? "custom-smtp" : "gmail-service",
+      userConfigured: Boolean(smtpUser)
+    });
   }
 });
 

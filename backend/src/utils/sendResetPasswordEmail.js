@@ -61,6 +61,12 @@ const sendResetPasswordEmail = async ({ to, name, resetUrl }) => {
     return true;
   } catch (error) {
     console.error("❌ Nodemailer Error:", error.message);
+    if (error?.response) {
+      console.error("SMTP response:", error.response);
+    }
+    if (error?.code) {
+      console.error("SMTP code:", error.code);
+    }
     return false;
   }
 };
