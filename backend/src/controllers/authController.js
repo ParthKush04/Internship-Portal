@@ -348,11 +348,9 @@ const forgotPassword = async (req, res, next) => {
 
     console.log(`✉️  Password reset requested for ${user.email} — resetUrl: ${resetUrl}`);
 
-    try {
-      await sendResetPasswordEmail({ to: user.email, name: user.name, resetUrl });
-    } catch (emailErr) {
+    void sendResetPasswordEmail({ to: user.email, name: user.name, resetUrl }).catch((emailErr) => {
       console.error("Failed to send reset email:", emailErr.message || emailErr);
-    }
+    });
 
     res.json({ message: "If an account with that email exists, a reset link has been sent." });
   } catch (error) {
