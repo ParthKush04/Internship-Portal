@@ -19,6 +19,7 @@ router.post("/login", loginValidationRules, handleValidationErrors, loginUser);
 router.post("/google", googleAuthValidationRules, handleValidationErrors, googleAuth);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
+router.get('/ping', (_req, res) => res.json({ ok: true, route: '/api/auth/ping' }));
 router.get("/me", protect, getMe);
 router.put("/update-profile", protect, updateProfile);
 router.post(
