@@ -459,23 +459,18 @@ const shortlistCandidate = async (req, res, next) => {
     );
     console.log("Offer letter record saved");
 
-    // STEP 7: Send offer letter email and verify SMTP acceptance
-    console.log("========== SENDING OFFER LETTER EMAIL ==========");
-    const offerEmailSent = await sendOfferLetterEmail({
+    // STEP 7: Send offer letter email (non-blocking - in background)
+    console.log("========== QUEUING OFFER LETTER EMAIL ==========");
+    sendOfferLetterEmail({
       to: student.email,
       studentName: student.name,
       pdfBuffer: offerResult.pdfBuffer,
       startDate,
       duration,
       assignedInternship
+    }).catch((err) => {
+      console.error("Background email error:", err.message);
     });
-
-    if (!offerEmailSent) {
-      return res.status(500).json({
-        message: "Offer letter email could not be sent",
-        error: "SMTP did not accept the offer letter email"
-      });
-    }
 
     // STEP 8: Create internship record
     console.log("========== CREATING INTERNSHIP ==========");
@@ -749,20 +744,15 @@ const completeInternshipForApplication = async (req, res, next) => {
       return res.status(500).json({ message: "Certificate PDF generation returned empty buffer" });
     }
 
-    // STEP 5: Send certificate email and verify SMTP acceptance
-    console.log("========== SENDING CERTIFICATE EMAIL ==========");
-    const certificateEmailSent = await sendCertificateEmail({
+    // STEP 5: Send certificate email (non-blocking - in background)
+    console.log("========== QUEUING CERTIFICATE EMAIL ==========");
+    sendCertificateEmail({
       to: student.email,
       studentName: student.name,
       pdfBuffer
+    }).catch((err) => {
+      console.error("Background email error:", err.message);
     });
-
-    if (!certificateEmailSent) {
-      return res.status(500).json({
-        message: "Certificate email could not be sent",
-        error: "SMTP did not accept the certificate email"
-      });
-    }
 
     console.log("========== COMPLETE INTERNSHIP SUCCESS ==========");
     

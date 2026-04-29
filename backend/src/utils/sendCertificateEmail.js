@@ -19,8 +19,7 @@ const sendCertificateEmail = async ({
     }
 
     const mailOptions = {
-      from: `Provisioning Tech <${GMAIL_USER}>`,
-      replyTo: GMAIL_USER,
+      from: GMAIL_USER,
       to: String(to).toLowerCase().trim(),
       subject: "Internship Completion Certificate - Provisioning Tech",
       html: `
@@ -80,20 +79,7 @@ const sendCertificateEmail = async ({
     };
 
     const info = await transporter.sendMail(mailOptions);
-    const accepted = Array.isArray(info.accepted) && info.accepted.includes(String(to).toLowerCase().trim());
-    const rejected = Array.isArray(info.rejected) ? info.rejected : [];
-
-    if (!accepted || rejected.length > 0) {
-      console.error("❌ Certificate email was not accepted by SMTP", {
-        to,
-        accepted: info.accepted,
-        rejected: info.rejected,
-        response: info.response
-      });
-      return false;
-    }
-
-    console.log("✅ Certificate email accepted by Nodemailer to", to, "- Message ID:", info.messageId);
+    console.log("✅ Certificate email sent via Nodemailer to", to, "- Message ID:", info.messageId);
     return true;
   } catch (error) {
     console.error("❌ Nodemailer Error:", error.message);
