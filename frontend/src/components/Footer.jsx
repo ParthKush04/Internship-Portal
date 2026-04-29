@@ -53,8 +53,8 @@ function Footer() {
         <div>
           <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-900">Contact</h3>
           <ul className="mt-4 space-y-2 text-sm text-gray-600">
-            <li>Email: hello@provisioningtech.com</li>
-            <li>Phone: +91 98765 43210</li>
+            <li>Email: info@provisioningtech.com</li>
+            <li>Phone: +91– 8938983711</li>
             <li>Location: India</li>
           </ul>
           <div className="mt-5 flex items-center gap-3">

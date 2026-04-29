@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext";
 
 function HomePage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [visibleSections, setVisibleSections] = useState({
     internships: false,
     about: false,
@@ -178,6 +178,11 @@ function HomePage() {
     }`;
 
   const handleApplyNow = () => {
+    if (!isAuthenticated) {
+      navigate("/login", { state: { from: "/apply" } });
+      return;
+    }
+
     navigate("/apply");
   };
 

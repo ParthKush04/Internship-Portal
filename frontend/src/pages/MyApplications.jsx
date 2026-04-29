@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 import { toast } from "react-toastify";
 import api, { setAuthToken } from "../services/api";
 import Spinner from "../components/Spinner";
@@ -58,6 +59,7 @@ const formatDate = (dateValue) => {
 
 function MyApplications() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -147,7 +149,10 @@ function MyApplications() {
             <p className="text-gray-500">You have not applied for any internships yet</p>
             <button
               type="button"
-              onClick={() => navigate("/apply")}
+              onClick={() => {
+                if (!isAuthenticated) return navigate("/login", { state: { from: "/apply" } });
+                navigate("/apply");
+              }}
               disabled={hasActiveInternship}
               className={`mt-4 rounded-lg px-5 py-2.5 text-sm font-semibold transition-colors ${
                 hasActiveInternship
@@ -282,7 +287,10 @@ function MyApplications() {
                       {showCancelledMessage && (
                         <button
                           type="button"
-                          onClick={() => navigate("/apply")}
+                          onClick={() => {
+                            if (!isAuthenticated) return navigate("/login", { state: { from: "/apply" } });
+                            navigate("/apply");
+                          }}
                           className="inline-flex items-center rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-orange-700"
                         >
                           Apply Again

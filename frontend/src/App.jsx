@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Navbar from "./components/Navbar.jsx";
@@ -19,11 +19,12 @@ const MyWeeklyReportsPage = lazy(() => import("./pages/MyWeeklyReportsPage.jsx")
 
 function ProtectedRoute({ element }) {
   const { isAuthenticated, authReady } = useAuth();
+  const location = useLocation();
   if (!authReady) {
     return <PageSkeleton rows={3} />;
   }
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
   return element;
 }
