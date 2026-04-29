@@ -30,5 +30,9 @@ const resolveFromEmail = () => {
   return fromEmail;
 };
 
+const resolveFromName = () => {
+  return String(process.env.SENDGRID_FROM_NAME || process.env.EMAIL_FROM_NAME || "Provisioning Tech").trim();
+};
+
 export default initializeSendGrid;
-export { sgMail, resolveFromEmail };
+export { sgMail, resolveFromEmail, resolveFromName };

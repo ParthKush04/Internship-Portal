@@ -1,4 +1,4 @@
-import { resolveFromEmail, sgMail } from "../config/sendGrid.js";
+import { resolveFromEmail, resolveFromName, sgMail } from "../config/sendGrid.js";
 
 const sendResetPasswordEmail = async ({ to, name, resetUrl }) => {
   if (!to || !resetUrl) {
@@ -13,8 +13,11 @@ const sendResetPasswordEmail = async ({ to, name, resetUrl }) => {
       return false;
     }
 
+    const fromName = resolveFromName();
+    console.log("📨 Password reset send config:", { fromEmail, fromName, to: String(to).toLowerCase().trim() });
+
     const mailOptions = {
-      from: fromEmail,
+      from: { email: fromEmail, name: fromName },
       to: String(to).toLowerCase().trim(),
       subject: "Reset Your Provisioning Tech Password",
       html: `
@@ -56,8 +59,9 @@ const sendResetPasswordEmail = async ({ to, name, resetUrl }) => {
       text: `Dear ${name || "Student"},\n\nWe received a request to reset your Provisioning Tech account password.\n\nOpen this link to set a new password (expires in 1 hour):\n${resetUrl}\n\nIf you did not request this, you can ignore this email.\n\nBest regards,\nProvisioning Tech Team`
     };
 
-    const [info] = await sgMail.send(mailOptions);
-    console.log("✅ Password reset email sent via SendGrid to", to, "- Message ID:", info?.headers?.["x-message-id"] || info?.headers?.["X-Message-Id"] || "n/a");
+    const response = await sgMail.send(mailOptions);
+    const info = Array.isArray(response) ? response[0] : response;
+    console.log("✅ Password reset email sent via SendGrid to", to, "- Status:", info?.statusCode || "n/a");
     return true;
   } catch (error) {
     console.error("❌ SendGrid Error:", error.message);

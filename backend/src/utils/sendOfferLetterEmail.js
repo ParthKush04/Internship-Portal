@@ -1,4 +1,4 @@
-import { resolveFromEmail, sgMail } from "../config/sendGrid.js";
+import { resolveFromEmail, resolveFromName, sgMail } from "../config/sendGrid.js";
 
 const sendOfferLetterEmail = async ({
   to,
@@ -21,6 +21,9 @@ const sendOfferLetterEmail = async ({
       return false;
     }
 
+    const fromName = resolveFromName();
+    console.log("📨 Offer letter send config:", { fromEmail, fromName, to: String(to).toLowerCase().trim() });
+
     // Convert buffer to base64
     let base64Content;
     if (Buffer.isBuffer(pdfBuffer)) {
@@ -33,7 +36,7 @@ const sendOfferLetterEmail = async ({
     }
 
     const mailOptions = {
-      from: fromEmail,
+      from: { email: fromEmail, name: fromName },
       to: String(to).toLowerCase().trim(),
       subject: "Internship Offer Letter - Provisioning Tech",
       html: `
@@ -99,8 +102,9 @@ const sendOfferLetterEmail = async ({
       ]
     };
 
-    const [info] = await sgMail.send(mailOptions);
-    console.log("✅ Offer letter email sent via SendGrid to", to, "- Message ID:", info?.headers?.["x-message-id"] || info?.headers?.["X-Message-Id"] || "n/a");
+    const response = await sgMail.send(mailOptions);
+    const info = Array.isArray(response) ? response[0] : response;
+    console.log("✅ Offer letter email sent via SendGrid to", to, "- Status:", info?.statusCode || "n/a");
     return true;
   } catch (error) {
     console.error("❌ SendGrid Error:", error.message);

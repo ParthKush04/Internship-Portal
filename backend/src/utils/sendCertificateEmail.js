@@ -1,4 +1,4 @@
-import { resolveFromEmail, sgMail } from "../config/sendGrid.js";
+import { resolveFromEmail, resolveFromName, sgMail } from "../config/sendGrid.js";
 
 const sendCertificateEmail = async ({
   to,
@@ -18,8 +18,11 @@ const sendCertificateEmail = async ({
       return false;
     }
 
+    const fromName = resolveFromName();
+    console.log("📨 Certificate send config:", { fromEmail, fromName, to: String(to).toLowerCase().trim() });
+
     const mailOptions = {
-      from: fromEmail,
+      from: { email: fromEmail, name: fromName },
       to: String(to).toLowerCase().trim(),
       subject: "Internship Completion Certificate - Provisioning Tech",
       html: `
@@ -79,8 +82,9 @@ const sendCertificateEmail = async ({
       ]
     };
 
-    const [info] = await sgMail.send(mailOptions);
-    console.log("✅ Certificate email sent via SendGrid to", to, "- Message ID:", info?.headers?.["x-message-id"] || info?.headers?.["X-Message-Id"] || "n/a");
+    const response = await sgMail.send(mailOptions);
+    const info = Array.isArray(response) ? response[0] : response;
+    console.log("✅ Certificate email sent via SendGrid to", to, "- Status:", info?.statusCode || "n/a");
     return true;
   } catch (error) {
     console.error("❌ SendGrid Error:", error.message);
