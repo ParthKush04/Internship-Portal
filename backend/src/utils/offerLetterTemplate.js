@@ -12,7 +12,9 @@ export const offerLetterTemplate = (data) => {
     refNumber,
     hrContactName,
     hrContactEmail,
-    hrContactPhone
+    hrContactPhone,
+    studentEmail,
+    studentPhone
   } = data;
 
   console.log("DESTRUCTURED VALUES:", { name, internshipType, startDate, duration });
@@ -705,6 +707,10 @@ export const offerLetterTemplate = (data) => {
         <p>We welcome you to the team and wish you a successful learning experience with us.</p>
       </div>
 
+      <div class="body-text">
+        <p><strong>Internship Period:</strong> ${duration} months</p>
+      </div>
+
       <div class="terms-title">TERMS AND CONDITIONS OF INTERNSHIP OFFER</div>
 
       <div class="term-section">
@@ -785,8 +791,8 @@ export const offerLetterTemplate = (data) => {
 
       <div class="hr-contact">
         <p><strong>Name:</strong> Parth Kushwaha</p>
-        <p><strong>Email:</strong> parthkush1000@gmail.com</p>
-        <p><strong>Mobile:</strong> +91- 9044775397</p>
+        <p><strong>Email:</strong> ${studentEmail || hrContactEmail || ""}</p>
+        <p><strong>Mobile:</strong> ${studentPhone || hrContactPhone || ""}</p>
       </div>
     </div>
 

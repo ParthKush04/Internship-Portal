@@ -176,6 +176,7 @@ export const generateOfferLetterFromTemplate = async ({
   salary = "",
   email = "",
   mobile = "",
+  internshipPeriod = "",
   offsetX = 0,
   offsetY = 0
 }) => {
@@ -217,6 +218,11 @@ export const generateOfferLetterFromTemplate = async ({
     }
     drawLine(page3, font, `Dear, Mr. ${candidateName}`, 49.6 + ox, 622.9 + oy, BODY, 520);
     drawInline(page5, font, candidateName, 90.5 + ox, 324.4 + oy, BODY, 220);
+  }
+
+  const periodText = String(internshipPeriod || month || "").trim();
+  if (periodText) {
+    drawLine(page3, font, `Internship Period - ${periodText} Months`, 49.6 + ox, 664.2 + oy, BODY, 520);
   }
 
   const subjectText = String(subject || "").trim();

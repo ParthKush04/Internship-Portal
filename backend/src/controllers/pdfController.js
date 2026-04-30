@@ -3,6 +3,16 @@ import generateOfferLetterPdf from "../utils/generateOfferLetterPdf.js";
 import { generateCertificate } from "../utils/generateCertificate.js";
 import fs from "fs";
 
+const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
+
+const resolveRecipientEmail = (application) => {
+  return normalizeEmail(application?.contactDetails?.email || application?.email || application?.studentId?.email);
+};
+
+const resolveRecipientPhone = (application) => {
+  return String(application?.contactDetails?.phone || application?.phone || application?.studentId?.phone || "").trim();
+};
+
 const formatDate = (value) => {
   if (!value) {
     return "Not available";
@@ -48,6 +58,8 @@ const getOfferLetterPdf = async (req, res, next) => {
     const pdfResult = await generateOfferLetterPdf({
       studentId: application._id || req.params.id,
       studentName: fullName || "Student",
+      studentEmail: resolveRecipientEmail(application),
+      studentPhone: resolveRecipientPhone(application),
       role: application.assignedInternship || application.internshipPreference || "Internship",
       startDate: application.startDate || new Date(),
       duration: getDurationInMonths(application.duration)

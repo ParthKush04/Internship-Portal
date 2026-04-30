@@ -13,6 +13,8 @@ const __dirname = path.dirname(__filename);
 export const generateOfferLetterPdf = async ({ 
   studentId, 
   studentName, 
+  studentEmail = "",
+  studentPhone = "",
   role, 
   startDate, 
   duration, 
@@ -64,7 +66,7 @@ export const generateOfferLetterPdf = async ({
     console.log("formattedDate:", formattedDate);
     console.log("durationNumber:", durationNumber);
     console.log("Input Parameters:");
-    console.log({ studentId, studentName, role, startDate, duration, hrContactName, hrContactEmail, hrContactPhone });
+    console.log({ studentId, studentName, studentEmail, studentPhone, role, startDate, duration, hrContactName, hrContactEmail, hrContactPhone });
     console.log("==========================================");
 
     // Generate HTML from template with fallback values for testing
@@ -76,7 +78,9 @@ export const generateOfferLetterPdf = async ({
       refNumber: refNumber,
       hrContactName: hrContactName || "Parth Kushwaha",
       hrContactEmail: hrContactEmail || "parthkush1000@gmail.com",
-      hrContactPhone: hrContactPhone || "+91- 9044775397"
+      hrContactPhone: hrContactPhone || "+91- 9044775397",
+      studentEmail: studentEmail || "",
+      studentPhone: studentPhone || ""
     };
 
     console.log("TEMPLATE DATA OBJECT:", templateData);
@@ -95,11 +99,12 @@ export const generateOfferLetterPdf = async ({
         offerAsOn: rolePosition,
         startDate: templateData.startDate,
         month: String(templateData.duration || "").trim(),
+        internshipPeriod: String(templateData.duration || "").trim(),
         name: templateData.name,
         subject: `Internship Offer Letter for the post of ${roleTrack}`,
         salary: "0",
-        email: "",
-        mobile: ""
+        email: templateData.studentEmail,
+        mobile: templateData.studentPhone
       });
       pdfBuffer = Buffer.from(templatePdfBytes);
     } catch (templateError) {

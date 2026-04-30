@@ -84,6 +84,12 @@ const resolveRecipientEmail = (application, student) => {
   return contactEmail || accountEmail;
 };
 
+const resolveRecipientPhone = (application, student) => {
+  const contactPhone = String(application?.contactDetails?.phone || application?.phone || "").trim();
+  const accountPhone = String(student?.phone || "").trim();
+  return contactPhone || accountPhone;
+};
+
 const triggerOfferLetterGeneration = async (application, startDate, duration, endDate) => {
   const studentId = application.studentId;
   const existingOfferLetter = await OfferLetter.findOne({ studentId });
@@ -92,9 +98,19 @@ const triggerOfferLetterGeneration = async (application, startDate, duration, en
   let offerLetter = existingOfferLetter;
   if (!offerLetter) {
     const role = `${assignedInternshipRole} Intern`;
+    const student = await User.findById(studentId).select("email phone");
+    if (!student) {
+      throw new Error("Student not found for offer letter generation");
+    }
+
+    const recipientEmail = resolveRecipientEmail(application, student);
+    const recipientPhone = resolveRecipientPhone(application, student);
+
     const pdfResult = await generateOfferLetterPdf({
       studentId,
       studentName,
+      studentEmail: recipientEmail,
+      studentPhone: recipientPhone,
       role,
       startDate,
       duration,
@@ -109,12 +125,13 @@ const triggerOfferLetterGeneration = async (application, startDate, duration, en
     });
   }
 
-  const student = await User.findById(studentId).select("email");
+  const student = await User.findById(studentId).select("email phone");
   if (!student) {
     throw new Error("Student not found for offer letter email");
   }
 
   const recipientEmail = resolveRecipientEmail(application, student);
+  const recipientPhone = resolveRecipientPhone(application, student);
   if (!recipientEmail) {
     throw new Error("Recipient email not found for offer letter email");
   }
@@ -455,6 +472,8 @@ const shortlistCandidate = async (req, res, next) => {
       offerResult = await generateOfferLetterPdf({
         studentId: application._id,
         studentName: student.name,
+        studentEmail: recipientEmail,
+        studentPhone: recipientPhone,
         role: `${assignedInternship} Intern`,
         startDate: new Date(startDate),
         duration,
