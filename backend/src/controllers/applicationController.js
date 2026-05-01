@@ -437,6 +437,7 @@ const shortlistCandidate = async (req, res, next) => {
 
     const student = application.studentId;
     const recipientEmail = resolveRecipientEmail(application, student);
+    const recipientPhone = resolveRecipientPhone(application, student);
     console.log("Student:", student.name, "Account Email:", student.email, "Recipient Email:", recipientEmail);
 
     if (!recipientEmail) {
